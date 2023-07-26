@@ -6,6 +6,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
@@ -25,6 +27,9 @@ public class TracerInitializer {
     @Account
     Tracer tracer;
 
+    @ConfigProperty(name = "APP_NAME")
+    private String appName;
+
     void onStart(@Observes StartupEvent ev) {
         OtlpGrpcSpanExporter spanExporter = OtlpGrpcSpanExporter.builder().setTimeout(2, TimeUnit.SECONDS).build();
         BatchSpanProcessor spanProcessor = BatchSpanProcessor.builder(spanExporter)
@@ -32,7 +37,7 @@ public class TracerInitializer {
 
         sdkProvider = OpenTelemetrySdk.builder()
                 .setTracerProvider(SdkTracerProvider.builder().addSpanProcessor(spanProcessor)
-                        .setResource(Resource.create(Attributes.of(ResourceAttributes.SERVICE_NAME, "account")))
+                        .setResource(Resource.create(Attributes.of(ResourceAttributes.SERVICE_NAME, appName)))
                         .build())
                 .build();
 
